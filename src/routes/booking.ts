@@ -1,23 +1,23 @@
 
 
 import { Router } from 'express';
-import { listBookings, createBooking } from '../controllers/bookingController';
-import { getUserBookings, cancelBooking } from '../controllers/bookingManageController';
 import { authenticate } from '../middleware/auth';
+import {
+  createBooking,
+  getMyBookings,
+  getOwnerBookings,
+  cancelBooking
+} from '../controllers/bookingController';
 
 const bookingRouter = Router();
 
-// List all bookings
-bookingRouter.get('/', listBookings);
-
-
-// Create a new booking (requires authentication)
+// Create a booking (booker)
 bookingRouter.post('/', authenticate, createBooking);
-
-// Get current user's bookings
-bookingRouter.get('/my', authenticate, getUserBookings);
-
-// Cancel a booking
-bookingRouter.delete('/:id', authenticate, cancelBooking);
+// Get bookings for the logged-in booker
+bookingRouter.get('/my', authenticate, getMyBookings);
+// Get bookings for properties owned by the logged-in owner
+bookingRouter.get('/owner', authenticate, getOwnerBookings);
+// Cancel a booking (booker)
+bookingRouter.patch('/:id/cancel', authenticate, cancelBooking);
 
 export default bookingRouter;

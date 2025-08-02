@@ -1,3 +1,7 @@
+import Property from '../models/property';
+import { Request, Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
+
 export const getPropertyById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -17,10 +21,6 @@ export const getPropertyById = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Server error.' });
   }
 };
-
-import Property from '../models/property';
-import { Request, Response } from 'express';
-import { AuthRequest } from '../middleware/auth';
 
 export const listProperties = async (req: Request, res: Response) => {
   try {
@@ -51,6 +51,41 @@ export const createProperty = async (req: AuthRequest, res: Response) => {
     const property = new Property({ title, description, address, price, owner: req.user.userId });
     await property.save();
     res.status(201).json(property);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error.' });
+  }
+};
+
+export const updateProperty = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized.' });
+    }
+    const { id } = req.params;
+    const property = await Property.findOne({ _id: id, owner: req.user.userId });
+    if (!property) return res.status(404).json({ message: 'Property not found.' });
+    const { title, description, address, price, images } = req.body;
+    if (title) property.title = title;
+    if (description) property.description = description;
+    if (address) property.address = address;
+    if (price) property.price = price;
+    if (images) property.images = images;
+    await property.save();
+    res.json(property);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error.' });
+  }
+};
+
+export const deleteProperty = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized.' });
+    }
+    const { id } = req.params;
+    const property = await Property.findOneAndDelete({ _id: id, owner: req.user.userId });
+    if (!property) return res.status(404).json({ message: 'Property not found.' });
+    res.json({ message: 'Property deleted.' });
   } catch (err) {
     res.status(500).json({ message: 'Server error.' });
   }
